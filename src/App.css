@@ -1,0 +1,184 @@
+.page-shell {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0 64px;
+}
+
+.hero-card,
+.panel {
+  background: rgba(255, 252, 246, 0.84);
+  border: 1px solid rgba(105, 76, 54, 0.14);
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(88, 60, 35, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.hero-card {
+  padding: 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -40px -70px auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(236, 160, 75, 0.34), transparent 68%);
+}
+
+.eyebrow,
+.section-label {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.78rem;
+  color: var(--accent-strong);
+}
+
+.hero-card h1,
+.panel h2,
+.highlight-card h3 {
+  margin: 0;
+  color: var(--ink-strong);
+}
+
+.hero-card h1 {
+  max-width: 10ch;
+  font-size: clamp(2.8rem, 8vw, 5.4rem);
+  line-height: 0.95;
+}
+
+.lead {
+  max-width: 640px;
+  margin-top: 20px;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.primary-button {
+  color: #fffaf4;
+  background: linear-gradient(135deg, #c9722c, #96501d);
+  box-shadow: 0 18px 30px rgba(150, 80, 29, 0.28);
+}
+
+.secondary-button {
+  color: var(--ink-strong);
+  background: rgba(255, 244, 228, 0.88);
+  border: 1px solid rgba(150, 80, 29, 0.18);
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+  transform: translateY(-2px);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+  margin-top: 24px;
+}
+
+.panel {
+  padding: 32px;
+}
+
+.intro-panel p,
+.highlight-card p {
+  margin-top: 14px;
+  line-height: 1.75;
+}
+
+.profile-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: grid;
+  gap: 16px;
+}
+
+.profile-list li {
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(105, 76, 54, 0.12);
+}
+
+.profile-list span,
+.profile-list strong {
+  display: block;
+}
+
+.profile-list span {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.section-heading {
+  margin-bottom: 22px;
+}
+
+.highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.highlight-card {
+  padding: 24px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 248, 238, 0.92), rgba(255, 243, 224, 0.82));
+  border: 1px solid rgba(201, 114, 44, 0.14);
+}
+
+.highlight-card h3 {
+  font-size: 1.15rem;
+}
+
+@media (max-width: 900px) {
+  .page-shell {
+    width: min(100% - 24px, 1100px);
+    padding: 24px 0 40px;
+  }
+
+  .hero-card,
+  .panel {
+    border-radius: 22px;
+  }
+
+  .hero-card,
+  .panel,
+  .highlight-card {
+    padding: 24px;
+  }
+
+  .content-grid,
+  .highlight-grid {
+    grid-template-columns: 1fr;
+  }
+}
