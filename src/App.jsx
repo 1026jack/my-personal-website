@@ -2,16 +2,16 @@ import './App.css'
 
 const highlights = [
   {
-    title: 'School Life',
-    text: 'I am a student who enjoys learning by building small projects and exploring new technologies step by step.',
+    title: 'Education',
+    text: 'I am currently studying for a Master of Electrical Engineering in Cyber Security at National Taiwan University, after completing my bachelor degree in Biomechatronics Engineering.',
   },
   {
-    title: 'Favorite Tools',
-    text: 'React, Vite, GitHub, and VS Code help me turn ideas into simple and interactive web experiences.',
+    title: 'Interests',
+    text: 'Outside of class, I enjoy playing the guitar and singing. Music helps me stay creative and balanced while learning technical skills.',
   },
   {
     title: 'Future Goals',
-    text: 'I want to improve my frontend skills, write cleaner code, and create websites that are useful and friendly.',
+    text: 'I want to become familiar with the skills of Attacking and Defense of Network and build a stronger foundation for future cybersecurity work.',
   },
 ]
 
@@ -20,10 +20,11 @@ function App() {
     <main className="page-shell">
       <section className="hero-card">
         <p className="eyebrow">Personal Website</p>
-        <h1>Hi, I&apos;m Web Explorer</h1>
+        <h1>Hi, I&apos;m Jack</h1>
         <p className="lead">
-          Welcome to my homepage. This small website introduces who I am, what
-          I enjoy learning, and where I hope to grow next.
+          My name is Huang, Yan-Jia. I am from Taipei, Taiwan, and this page is
+          a simple introduction to my background, interests, and learning
+          goals.
         </p>
 
         <div className="hero-actions">
@@ -40,14 +41,14 @@ function App() {
         <article className="panel intro-panel">
           <h2>Introduction</h2>
           <p>
-            I am a curious learner who likes technology, design, and solving
-            problems with code. I enjoy practicing web development because it
-            lets me combine creativity with logic in one place.
+            I am a graduate student at National Taiwan University, currently
+            pursuing a Master of Electrical Engineering in Cyber Security in
+            the College of EECS.
           </p>
           <p>
-            Outside of coding, I like discovering useful tools, organizing my
-            ideas, and learning new skills that can help me in school and future
-            projects.
+            Before that, I studied Biomechatronics Engineering and developed my
+            programming and AI foundation through coursework and projects. I am
+            now continuing to grow in cybersecurity and network defense.
           </p>
         </article>
 
@@ -55,20 +56,20 @@ function App() {
           <h2>Quick Profile</h2>
           <ul className="profile-list">
             <li>
-              <span>Nickname</span>
-              <strong>Web Explorer</strong>
+              <span>Name</span>
+              <strong>Huang, Yan-Jia / Jack</strong>
             </li>
             <li>
-              <span>Interests</span>
-              <strong>Frontend, UI design, problem solving</strong>
+              <span>From</span>
+              <strong>Taipei, Taiwan</strong>
             </li>
             <li>
               <span>Hobbies</span>
-              <strong>Learning tech, reading, music</strong>
+              <strong>Playing the guitar and singing</strong>
             </li>
             <li>
-              <span>Focus</span>
-              <strong>Building clean and readable websites</strong>
+              <span>Learning Focus</span>
+              <strong>Attacking and Defense of Network</strong>
             </li>
           </ul>
         </aside>
@@ -88,6 +89,38 @@ function App() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="content-grid">
+        <article className="panel">
+          <h2>Academic Background</h2>
+          <ul className="timeline-list">
+            <li>
+              <strong>National Taiwan University</strong>
+              <span>Master of Electrical Engineering in Cyber Security</span>
+              <em>Sep 2025 - present</em>
+            </li>
+            <li>
+              <strong>National Taiwan University</strong>
+              <span>Bachelor of Biomechatronics Engineering</span>
+              <em>Sep 2020 - June 2025</em>
+            </li>
+            <li>
+              <strong>Taipei Municipal Chien Kuo High School</strong>
+              <span>Programming Track</span>
+              <em>Sep 2016 - June 2020</em>
+            </li>
+          </ul>
+        </article>
+
+        <article className="panel">
+          <h2>Course Goal</h2>
+          <p>
+            My goal for this course is to become more familiar with the skills
+            used in Attacking and Defense of Network and apply them with better
+            understanding and confidence.
+          </p>
+        </article>
       </section>
     </main>
   )

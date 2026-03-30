@@ -110,7 +110,9 @@
 }
 
 .intro-panel p,
-.highlight-card p {
+.highlight-card p,
+.timeline-list span,
+.timeline-list em {
   margin-top: 14px;
   line-height: 1.75;
 }
@@ -158,6 +160,43 @@
 
 .highlight-card h3 {
   font-size: 1.15rem;
+}
+
+.timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 18px;
+}
+
+.timeline-list li {
+  padding: 18px 0 0;
+  border-top: 1px solid rgba(105, 76, 54, 0.12);
+}
+
+.timeline-list li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.timeline-list strong,
+.timeline-list span,
+.timeline-list em {
+  display: block;
+}
+
+.timeline-list strong {
+  color: var(--ink-strong);
+}
+
+.timeline-list span {
+  margin-top: 6px;
+}
+
+.timeline-list em {
+  color: var(--muted);
+  font-style: normal;
 }
 
 @media (max-width: 900px) {
