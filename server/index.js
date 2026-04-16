@@ -41,6 +41,14 @@ app.use((req, res, next) => {
   next()
 })
 
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use(globalLimiter)
 app.use(express.json({ limit: '32kb' }))
 app.use('/uploads', express.static(uploadsDir, {
   dotfiles: 'deny',
@@ -51,14 +59,21 @@ app.use('/uploads', express.static(uploadsDir, {
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 30,
+  limit: 12,
   standardHeaders: true,
   legacyHeaders: false,
 })
 
 const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+const messageLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 12,
+  limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
 })
@@ -188,8 +203,12 @@ app.get('/api/me', (req, res) => {
 app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res) => {
   const username = cleanText(req.body.username, 32)
   const password = String(req.body.password || '')
+  const humanCheck = req.body.humanCheck === 'on'
   const avatarError = validateAvatar(req.file)
 
+  if (!humanCheck) {
+    return res.status(400).json({ error: 'Please confirm that you are not a robot.' })
+  }
   if (!username || !/^[a-zA-Z0-9_-]{3,32}$/.test(username)) {
     return res.status(400).json({ error: 'Username must be 3-32 letters, numbers, underscores, or hyphens.' })
   }
@@ -273,7 +292,7 @@ app.get('/api/messages', (_req, res) => {
   })
 })
 
-app.post('/api/messages', requireAuth, (req, res) => {
+app.post('/api/messages', messageLimiter, requireAuth, (req, res) => {
   const content = cleanText(req.body.content, 500)
   if (!content) return res.status(400).json({ error: 'Message must be 1-500 characters.' })
 
@@ -316,6 +335,11 @@ app.post('/api/praise', aiLimiter, requireAuth, async (req, res) => {
   if (!input) return res.status(400).json({ error: 'Please enter 1-20 characters.' })
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY is not configured on the server.' })
 
+  const usage = db.prepare('SELECT ai_uses FROM users WHERE id = ?').get(req.user.id)
+  if (!usage || usage.ai_uses >= 5) {
+    return res.status(429).json({ error: 'This account has reached the AI limit of 5 uses.' })
+  }
+
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
@@ -345,6 +369,7 @@ app.post('/api/praise', aiLimiter, requireAuth, async (req, res) => {
   const data = await response.json()
   const praise = getResponseText(data)
   if (!praise) return res.status(502).json({ error: 'OpenAI returned no praise text. Please try again.' })
+  db.prepare('UPDATE users SET ai_uses = ai_uses + 1 WHERE id = ?').run(req.user.id)
   res.json({ praise })
 })
 

@@ -301,6 +301,10 @@ function App() {
                     Avatar (JPG or PNG)
                     <input name="avatar" type="file" accept="image/jpeg,image/png" required />
                   </label>
+                  <label className="checkbox-label">
+                    <input name="humanCheck" type="checkbox" required />
+                    I am not a robot
+                  </label>
                   <button className="primary-button" type="submit">
                     Create Account
                   </button>

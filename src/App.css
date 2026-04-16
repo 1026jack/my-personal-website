@@ -241,6 +241,16 @@
   font-weight: 700;
 }
 
+.checkbox-label {
+  display: flex !important;
+  gap: 10px;
+  align-items: center;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
 input,
 textarea {
   width: 100%;

@@ -7,11 +7,13 @@ message board, and an AI praise machine powered by OpenAI's Responses API.
 
 - Personal homepage with profile, academic background, introduction, and owner avatar.
 - Visitor registration and login.
+- Registration requires an "I am not a robot" confirmation.
 - Visitor avatar upload limited to valid JPG and PNG files.
 - SQLite database for users, hashed passwords, sessions, avatars, and messages.
 - Message board where logged-in visitors can post messages.
 - Message authors can delete only their own messages.
 - AI praise machine using a server-side OpenAI Responses API call.
+- Each account can use the AI praise machine up to 5 times.
 
 ## Security Notes
 
@@ -26,6 +28,8 @@ message board, and an AI praise machine powered by OpenAI's Responses API.
   should not be exposed through static hosting.
 - OpenAI API key defense: the API key is used only by the backend and is never sent to
   frontend JavaScript.
+- DDoS / abuse mitigation: global request rate limiting, stricter auth rate limiting,
+  message posting rate limiting, and AI endpoint rate limiting are enabled.
 
 ## Local Setup
 

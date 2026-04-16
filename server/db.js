@@ -15,6 +15,7 @@ db.exec(`
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     avatar_path TEXT NOT NULL,
+    ai_uses INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -34,3 +35,8 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 `)
+
+const userColumns = db.prepare('PRAGMA table_info(users)').all().map((column) => column.name)
+if (!userColumns.includes('ai_uses')) {
+  db.prepare('ALTER TABLE users ADD COLUMN ai_uses INTEGER NOT NULL DEFAULT 0').run()
+}
