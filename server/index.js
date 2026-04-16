@@ -387,7 +387,20 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: 'Server error.' })
 })
 
-await initDb()
+async function initDbWithRetry(retries = 12) {
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      await initDb()
+      return
+    } catch (error) {
+      if (attempt === retries) throw error
+      console.error(`Database is not ready yet. Retry ${attempt}/${retries}...`)
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+    }
+  }
+}
+
+await initDbWithRetry()
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`)
