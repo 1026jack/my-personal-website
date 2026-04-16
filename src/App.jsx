@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || ''
-const ownerAvatar = `${import.meta.env.BASE_URL}headimg.svg`
+const ownerAvatar = `${import.meta.env.BASE_URL}headimg.JPG`
 
 function apiUrl(path) {
   return `${apiBase}${path}`
@@ -336,6 +336,7 @@ function App() {
             <h2>Get Complimented</h2>
           </div>
           <form className="stack-form" onSubmit={handlePraise}>
+            <p className="hint-text">Each account can use this AI praise machine up to 5 times.</p>
             <label>
               Enter anything
               <textarea
