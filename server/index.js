@@ -56,6 +56,10 @@ app.use('/uploads', express.static(uploadsDir, {
   fallthrough: false,
   immutable: true,
   maxAge: '1d',
+  setHeaders: (res) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+    res.setHeader('Access-Control-Allow-Origin', clientOrigin || '*')
+  },
 }))
 
 const authLimiter = rateLimit({
