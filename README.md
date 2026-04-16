@@ -75,3 +75,35 @@ On the backend, set:
 ```bash
 CLIENT_ORIGIN=https://1026jack.github.io
 ```
+
+## Render Backend Deployment
+
+1. Go to Render and create a new Web Service.
+2. Connect the GitHub repository `1026jack/my-personal-website`.
+3. Use these commands:
+
+```bash
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+4. Add these environment variables in Render:
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-5-nano
+CLIENT_ORIGIN=https://1026jack.github.io
+SESSION_SECRET=use-a-long-random-secret
+```
+
+5. After Render deploys, copy the backend URL, for example:
+
+```bash
+https://jack-personal-website-api.onrender.com
+```
+
+6. Add this URL to the GitHub Pages build as:
+
+```bash
+VITE_API_BASE_URL=https://jack-personal-website-api.onrender.com
+```

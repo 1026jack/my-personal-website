@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: jack-personal-website-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: OPENAI_MODEL
+        value: gpt-5-nano
+      - key: CLIENT_ORIGIN
+        value: https://1026jack.github.io
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
