@@ -312,8 +312,8 @@ app.delete('/api/messages/:id', requireAuth, (req, res) => {
 })
 
 app.post('/api/praise', aiLimiter, requireAuth, async (req, res) => {
-  const input = cleanText(req.body.text, 20)
-  if (!input) return res.status(400).json({ error: 'Please enter 1-20 characters.' })
+  const input = cleanText(req.body.text, 300)
+  if (!input) return res.status(400).json({ error: 'Please enter 1-300 characters.' })
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY is not configured on the server.' })
 
   const response = await fetch('https://api.openai.com/v1/responses', {
