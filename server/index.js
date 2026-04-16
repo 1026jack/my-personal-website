@@ -26,6 +26,7 @@ fsSync.mkdirSync(uploadsDir, { recursive: true })
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   }),
 )
 
