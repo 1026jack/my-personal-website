@@ -11,7 +11,8 @@ function apiUrl(path) {
 function assetUrl(path) {
   if (!path) return ownerAvatar
   if (path.startsWith('http')) return path
-  return `${apiBase}${path}`
+  if (apiBase) return `${apiBase}${path}`
+  return path
 }
 
 function App() {
