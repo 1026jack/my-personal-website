@@ -50,6 +50,7 @@ PORT=3001
 SESSION_SECRET=change-this-random-secret
 CLIENT_ORIGIN=http://localhost:5173
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jack_personal_website
+DATABASE_SSL=false
 ```
 
 ## Production Build
@@ -82,18 +83,21 @@ DATABASE_URL=your-render-postgres-internal-database-url
 
 ## Render Backend Deployment
 
-1. Go to Render and create a new Web Service.
-2. Connect the GitHub repository `1026jack/my-personal-website`.
-3. If using the included `render.yaml`, create a Blueprint on Render. It will create
+1. Go to Render.
+2. Prefer `New +` > `Blueprint`, not only `Web Service`.
+3. Connect the GitHub repository `1026jack/my-personal-website`.
+4. If using the included `render.yaml`, create a Blueprint on Render. It will create
    both the Web Service and PostgreSQL database.
-4. If creating the Web Service manually, use these commands:
+5. If creating the Web Service manually, you must also create a Render PostgreSQL
+   database and copy its internal database URL into `DATABASE_URL`.
+6. For manual Web Service setup, use these commands:
 
 ```bash
 Build Command: npm install && npm run build
 Start Command: npm start
 ```
 
-5. Add these environment variables in Render:
+7. Add these environment variables in Render:
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key
@@ -101,6 +105,7 @@ OPENAI_MODEL=gpt-5-nano
 CLIENT_ORIGIN=https://1026jack.github.io
 SESSION_SECRET=use-a-long-random-secret
 DATABASE_URL=your-render-postgres-internal-database-url
+DATABASE_SSL=false
 ```
 
 If using the Blueprint, `DATABASE_URL` is connected automatically from the Render
@@ -109,13 +114,13 @@ PostgreSQL database.
 Render's free PostgreSQL plan is suitable for class demos, but free databases expire
 after 30 days. Use a paid database plan for long-term storage.
 
-6. After Render deploys, copy the backend URL, for example:
+8. After Render deploys, copy the backend URL, for example:
 
 ```bash
 https://jack-personal-website-api.onrender.com
 ```
 
-7. Add this URL to the GitHub Pages build as:
+9. Add this URL to the GitHub Pages build as:
 
 ```bash
 VITE_API_BASE_URL=https://jack-personal-website-api.onrender.com
