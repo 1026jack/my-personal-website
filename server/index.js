@@ -8,7 +8,7 @@ import helmet from 'helmet'
 import multer from 'multer'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { db } from './db.js'
+import { getOne, initDb, query } from './db.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
@@ -131,18 +131,17 @@ function publicUser(user) {
   }
 }
 
-function authenticate(req, _res, next) {
+async function authenticate(req, _res, next) {
   const token = getSessionToken(req)
   if (!token) return next()
 
-  const session = db
-    .prepare(
-      `SELECT users.id, users.username, users.avatar_path
-       FROM sessions
-       JOIN users ON users.id = sessions.user_id
-       WHERE sessions.token = ? AND sessions.expires_at > ?`,
-    )
-    .get(token, Date.now())
+  const session = await getOne(
+    `SELECT users.id, users.username, users.avatar_path
+     FROM sessions
+     JOIN users ON users.id = sessions.user_id
+     WHERE sessions.token = $1 AND sessions.expires_at > $2`,
+    [token, Date.now()],
+  )
 
   if (session) req.user = session
   next()
@@ -220,20 +219,21 @@ app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res)
   try {
     const avatarPath = await saveAvatar(req.file)
     const passwordHash = await bcrypt.hash(password, 12)
-    const result = db
-      .prepare('INSERT INTO users (username, password_hash, avatar_path) VALUES (?, ?, ?)')
-      .run(username, passwordHash, avatarPath)
+    const result = await query(
+      'INSERT INTO users (username, password_hash, avatar_path) VALUES ($1, $2, $3) RETURNING id',
+      [username, passwordHash, avatarPath],
+    )
+    const userId = result.rows[0].id
 
     const token = crypto.randomBytes(32).toString('hex')
-    db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(
-      token,
-      result.lastInsertRowid,
-      Date.now() + 7 * 24 * 60 * 60 * 1000,
+    await query(
+      'INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)',
+      [token, userId, Date.now() + 7 * 24 * 60 * 60 * 1000],
     )
     setSessionCookie(res, token)
-    res.status(201).json({ user: { id: result.lastInsertRowid, username, avatarUrl: avatarPath } })
+    res.status(201).json({ user: { id: userId, username, avatarUrl: avatarPath } })
   } catch (error) {
-    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (error.code === '23505') {
       return res.status(409).json({ error: 'This username is already registered.' })
     }
     res.status(500).json({ error: 'Registration failed.' })
@@ -245,41 +245,38 @@ app.post('/api/login', authLimiter, async (req, res) => {
   const password = String(req.body.password || '')
   if (!username || !password) return res.status(400).json({ error: 'Username and password are required.' })
 
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username)
+  const user = await getOne('SELECT * FROM users WHERE username = $1', [username])
   const valid = user ? await bcrypt.compare(password, user.password_hash) : false
   if (!valid) return res.status(401).json({ error: 'Invalid username or password.' })
 
   const token = crypto.randomBytes(32).toString('hex')
-  db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(
-    token,
-    user.id,
-    Date.now() + 7 * 24 * 60 * 60 * 1000,
+  await query(
+    'INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)',
+    [token, user.id, Date.now() + 7 * 24 * 60 * 60 * 1000],
   )
   setSessionCookie(res, token)
   res.json({ user: publicUser(user) })
 })
 
-app.post('/api/logout', requireAuth, (req, res) => {
+app.post('/api/logout', requireAuth, async (req, res) => {
   const token = getSessionToken(req)
-  db.prepare('DELETE FROM sessions WHERE token = ?').run(token)
+  await query('DELETE FROM sessions WHERE token = $1', [token])
   clearSessionCookie(res)
   res.json({ ok: true })
 })
 
-app.get('/api/messages', (_req, res) => {
-  const messages = db
-    .prepare(
-      `SELECT messages.id, messages.content, messages.created_at, users.id AS user_id,
-              users.username, users.avatar_path
-       FROM messages
-       JOIN users ON users.id = messages.user_id
-       ORDER BY messages.id DESC
-       LIMIT 100`,
-    )
-    .all()
+app.get('/api/messages', async (_req, res) => {
+  const result = await query(
+    `SELECT messages.id, messages.content, messages.created_at, users.id AS user_id,
+            users.username, users.avatar_path
+     FROM messages
+     JOIN users ON users.id = messages.user_id
+     ORDER BY messages.id DESC
+     LIMIT 100`,
+  )
 
   res.json({
-    messages: messages.map((message) => ({
+    messages: result.rows.map((message) => ({
       id: message.id,
       content: message.content,
       createdAt: message.created_at,
@@ -292,20 +289,22 @@ app.get('/api/messages', (_req, res) => {
   })
 })
 
-app.post('/api/messages', messageLimiter, requireAuth, (req, res) => {
+app.post('/api/messages', messageLimiter, requireAuth, async (req, res) => {
   const content = cleanText(req.body.content, 500)
   if (!content) return res.status(400).json({ error: 'Message must be 1-500 characters.' })
 
-  const result = db.prepare('INSERT INTO messages (user_id, content) VALUES (?, ?)').run(req.user.id, content)
-  const message = db
-    .prepare(
-      `SELECT messages.id, messages.content, messages.created_at, users.id AS user_id,
-              users.username, users.avatar_path
-       FROM messages
-       JOIN users ON users.id = messages.user_id
-       WHERE messages.id = ?`,
-    )
-    .get(result.lastInsertRowid)
+  const inserted = await query('INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id', [
+    req.user.id,
+    content,
+  ])
+  const message = await getOne(
+    `SELECT messages.id, messages.content, messages.created_at, users.id AS user_id,
+            users.username, users.avatar_path
+     FROM messages
+     JOIN users ON users.id = messages.user_id
+     WHERE messages.id = $1`,
+    [inserted.rows[0].id],
+  )
 
   res.status(201).json({
     message: {
@@ -321,12 +320,12 @@ app.post('/api/messages', messageLimiter, requireAuth, (req, res) => {
   })
 })
 
-app.delete('/api/messages/:id', requireAuth, (req, res) => {
+app.delete('/api/messages/:id', requireAuth, async (req, res) => {
   const id = Number(req.params.id)
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid message id.' })
 
-  const result = db.prepare('DELETE FROM messages WHERE id = ? AND user_id = ?').run(id, req.user.id)
-  if (result.changes === 0) return res.status(404).json({ error: 'Message not found or not yours.' })
+  const result = await query('DELETE FROM messages WHERE id = $1 AND user_id = $2', [id, req.user.id])
+  if (result.rowCount === 0) return res.status(404).json({ error: 'Message not found or not yours.' })
   res.json({ ok: true })
 })
 
@@ -335,7 +334,7 @@ app.post('/api/praise', aiLimiter, requireAuth, async (req, res) => {
   if (!input) return res.status(400).json({ error: 'Please enter 1-20 characters.' })
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY is not configured on the server.' })
 
-  const usage = db.prepare('SELECT ai_uses FROM users WHERE id = ?').get(req.user.id)
+  const usage = await getOne('SELECT ai_uses FROM users WHERE id = $1', [req.user.id])
   if (!usage || usage.ai_uses >= 5) {
     return res.status(429).json({ error: 'This account has reached the AI limit of 5 uses.' })
   }
@@ -369,7 +368,7 @@ app.post('/api/praise', aiLimiter, requireAuth, async (req, res) => {
   const data = await response.json()
   const praise = getResponseText(data)
   if (!praise) return res.status(502).json({ error: 'OpenAI returned no praise text. Please try again.' })
-  db.prepare('UPDATE users SET ai_uses = ai_uses + 1 WHERE id = ?').run(req.user.id)
+  await query('UPDATE users SET ai_uses = ai_uses + 1 WHERE id = $1', [req.user.id])
   res.json({ praise })
 })
 
@@ -387,6 +386,8 @@ app.use((error, _req, res, _next) => {
   }
   res.status(500).json({ error: 'Server error.' })
 })
+
+await initDb()
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`)

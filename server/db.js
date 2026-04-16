@@ -1,42 +1,53 @@
-import Database from 'better-sqlite3'
-import fs from 'node:fs'
-import path from 'node:path'
+import pg from 'pg'
 
-const dataDir = path.resolve('data')
-fs.mkdirSync(dataDir, { recursive: true })
+const { Pool } = pg
 
-export const db = new Database(path.join(dataDir, 'site.sqlite'))
-db.pragma('journal_mode = WAL')
-db.pragma('foreign_keys = ON')
+const connectionString = process.env.DATABASE_URL
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    avatar_path TEXT NOT NULL,
-    ai_uses INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+if (!connectionString) {
+  throw new Error('DATABASE_URL is required. Use a PostgreSQL database for this app.')
+}
 
-  CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    expires_at INTEGER NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
+export const pool = new Pool({
+  connectionString,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+})
 
-  CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-`)
+export async function query(text, params = []) {
+  const result = await pool.query(text, params)
+  return result
+}
 
-const userColumns = db.prepare('PRAGMA table_info(users)').all().map((column) => column.name)
-if (!userColumns.includes('ai_uses')) {
-  db.prepare('ALTER TABLE users ADD COLUMN ai_uses INTEGER NOT NULL DEFAULT 0').run()
+export async function getOne(text, params = []) {
+  const result = await query(text, params)
+  return result.rows[0] || null
+}
+
+export async function initDb() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      avatar_path TEXT NOT NULL,
+      ai_uses INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at BIGINT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_uses INTEGER NOT NULL DEFAULT 0;
+  `)
 }

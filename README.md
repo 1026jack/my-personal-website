@@ -9,7 +9,7 @@ message board, and an AI praise machine powered by OpenAI's Responses API.
 - Visitor registration and login.
 - Registration requires an "I am not a robot" confirmation.
 - Visitor avatar upload limited to valid JPG and PNG files.
-- SQLite database for users, hashed passwords, sessions, avatars, and messages.
+- PostgreSQL database for users, hashed passwords, sessions, avatars, and messages.
 - Message board where logged-in visitors can post messages.
 - Message authors can delete only their own messages.
 - AI praise machine using a server-side OpenAI Responses API call.
@@ -24,7 +24,7 @@ message board, and an AI praise machine powered by OpenAI's Responses API.
   MIME checks, and JPG/PNG magic-byte checks.
 - Webshell defense: uploaded files are never executed, only served as static files from
   the `uploads` directory.
-- Backend file defense: `.env`, database files, and upload data are ignored by Git and
+- Backend file defense: `.env` and upload data are ignored by Git and
   should not be exposed through static hosting.
 - OpenAI API key defense: the API key is used only by the backend and is never sent to
   frontend JavaScript.
@@ -39,6 +39,8 @@ cp .env.example .env
 npm run dev:full
 ```
 
+You need a local PostgreSQL database before running the backend locally.
+
 Edit `.env` and set:
 
 ```bash
@@ -47,6 +49,7 @@ OPENAI_MODEL=gpt-5-nano
 PORT=3001
 SESSION_SECRET=change-this-random-secret
 CLIENT_ORIGIN=http://localhost:5173
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jack_personal_website
 ```
 
 ## Production Build
@@ -61,7 +64,7 @@ The Node server serves the built frontend from `dist` and exposes the API routes
 ## Deployment Important Note
 
 GitHub Pages can host only the static frontend. It cannot run the Express backend,
-SQLite database, avatar upload storage, sessions, or OpenAI API calls.
+PostgreSQL database, avatar upload storage, sessions, or OpenAI API calls.
 
 To make all features work publicly, deploy the backend to a Node-capable platform such
 as Render, Railway, Fly.io, or a VPS. Then set the frontend environment variable:
@@ -74,35 +77,45 @@ On the backend, set:
 
 ```bash
 CLIENT_ORIGIN=https://1026jack.github.io
+DATABASE_URL=your-render-postgres-internal-database-url
 ```
 
 ## Render Backend Deployment
 
 1. Go to Render and create a new Web Service.
 2. Connect the GitHub repository `1026jack/my-personal-website`.
-3. Use these commands:
+3. If using the included `render.yaml`, create a Blueprint on Render. It will create
+   both the Web Service and PostgreSQL database.
+4. If creating the Web Service manually, use these commands:
 
 ```bash
 Build Command: npm install && npm run build
 Start Command: npm start
 ```
 
-4. Add these environment variables in Render:
+5. Add these environment variables in Render:
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-5-nano
 CLIENT_ORIGIN=https://1026jack.github.io
 SESSION_SECRET=use-a-long-random-secret
+DATABASE_URL=your-render-postgres-internal-database-url
 ```
 
-5. After Render deploys, copy the backend URL, for example:
+If using the Blueprint, `DATABASE_URL` is connected automatically from the Render
+PostgreSQL database.
+
+Render's free PostgreSQL plan is suitable for class demos, but free databases expire
+after 30 days. Use a paid database plan for long-term storage.
+
+6. After Render deploys, copy the backend URL, for example:
 
 ```bash
 https://jack-personal-website-api.onrender.com
 ```
 
-6. Add this URL to the GitHub Pages build as:
+7. Add this URL to the GitHub Pages build as:
 
 ```bash
 VITE_API_BASE_URL=https://jack-personal-website-api.onrender.com
