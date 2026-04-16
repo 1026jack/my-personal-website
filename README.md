@@ -39,7 +39,7 @@ Edit `.env` and set:
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
+OPENAI_MODEL=gpt-5-nano
 PORT=3001
 SESSION_SECRET=change-this-random-secret
 CLIENT_ORIGIN=http://localhost:5173
