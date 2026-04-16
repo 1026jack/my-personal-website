@@ -337,11 +337,12 @@ function App() {
               <textarea
                 value={praiseInput}
                 onChange={(event) => setPraiseInput(event.target.value)}
-                maxLength="300"
-                placeholder="Write something and let AI praise it..."
+                maxLength="20"
+                placeholder="Write under 20 characters..."
                 required
               />
             </label>
+            <p className="hint-text">{praiseInput.length}/20 characters</p>
             <button className="primary-button" type="submit" disabled={!user || loadingPraise}>
               {loadingPraise ? 'Generating...' : 'Generate Praise'}
             </button>
