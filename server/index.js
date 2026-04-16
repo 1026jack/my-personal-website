@@ -159,7 +159,7 @@ function cleanText(value, maxLength) {
 }
 
 function validateAvatar(file) {
-  if (!file) return 'Please upload an avatar.'
+  if (!file) return 'Please upload a headshot.'
 
   const ext = path.extname(file.originalname).toLowerCase()
   const isJpeg = file.buffer.length > 3 && file.buffer[0] === 0xff && file.buffer[1] === 0xd8 && file.buffer[2] === 0xff
@@ -172,7 +172,7 @@ function validateAvatar(file) {
 
   if (ext === '.jpg' || ext === '.jpeg') return isJpeg && file.mimetype === 'image/jpeg' ? null : 'Only valid JPG or PNG files are allowed.'
   if (ext === '.png') return isPng && file.mimetype === 'image/png' ? null : 'Only valid JPG or PNG files are allowed.'
-  return 'Only JPG and PNG avatars are allowed.'
+  return 'Only JPG and PNG headshots are allowed.'
 }
 
 function getResponseText(data) {
@@ -382,7 +382,7 @@ app.use((error, _req, res, _next) => {
     return res.status(400).json({ error: 'Invalid JSON request body.' })
   }
   if (error instanceof multer.MulterError) {
-    return res.status(400).json({ error: 'Avatar upload failed. File may be too large.' })
+    return res.status(400).json({ error: 'Headshot upload failed. File may be too large.' })
   }
   res.status(500).json({ error: 'Server error.' })
 })

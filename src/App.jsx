@@ -183,7 +183,7 @@ function App() {
             </a>
           </div>
         </div>
-        <img className="owner-avatar" src={ownerAvatar} alt="Jack Huang profile avatar" />
+        <img className="owner-avatar" src={ownerAvatar} alt="Jack Huang profile headshot" />
       </section>
 
       <section className="content-grid" id="introduction">
@@ -268,7 +268,7 @@ function App() {
 
           {user ? (
             <div className="logged-in-card">
-              <img src={assetUrl(user.avatarUrl)} alt={`${user.username} avatar`} />
+              <img src={assetUrl(user.avatarUrl)} alt={`${user.username} headshot`} />
               <div>
                 <strong>{user.username}</strong>
                 <p>You can leave messages and use the AI praise machine.</p>
@@ -299,7 +299,7 @@ function App() {
                     <input name="password" type="password" autoComplete="new-password" required minLength="8" />
                   </label>
                   <label>
-                    Avatar (JPG or PNG)
+                    Headshot (JPG or PNG)
                     <input name="avatar" type="file" accept="image/jpeg,image/png" required />
                   </label>
                   <label className="checkbox-label">
@@ -384,7 +384,7 @@ function App() {
           ) : (
             messages.map((message) => (
               <article className="message-card" key={message.id}>
-                <img src={assetUrl(message.author.avatarUrl)} alt={`${message.author.username} avatar`} />
+                <img src={assetUrl(message.author.avatarUrl)} alt={`${message.author.username} headshot`} />
                 <div>
                   <div className="message-meta">
                     <strong>{message.author.username}</strong>

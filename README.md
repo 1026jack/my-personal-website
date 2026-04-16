@@ -1,15 +1,15 @@
 # Jack Huang Personal Website
 
-A personal website for Huang, Yan-Jia / Jack with a guest system, avatar upload,
+A personal website for Huang, Yan-Jia / Jack with a guest system, headshot upload,
 message board, and an AI praise machine powered by OpenAI's Responses API.
 
 ## Features
 
-- Personal homepage with profile, academic background, introduction, and owner avatar.
+- Personal homepage with profile, academic background, introduction, and owner headshot.
 - Visitor registration and login.
 - Registration requires an "I am not a robot" confirmation.
-- Visitor avatar upload limited to valid JPG and PNG files.
-- PostgreSQL database for users, hashed passwords, sessions, avatars, and messages.
+- Visitor headshot upload limited to valid JPG and PNG files.
+- PostgreSQL database for users, hashed passwords, sessions, headshots, and messages.
 - Message board where logged-in visitors can post messages.
 - Message authors can delete only their own messages.
 - AI praise machine using a server-side OpenAI Responses API call.
@@ -20,7 +20,7 @@ message board, and an AI praise machine powered by OpenAI's Responses API.
 - SQL Injection defense: all database access uses prepared statements.
 - Password safety: visitor passwords are hashed with bcrypt before storage.
 - XSS defense: messages are rendered through React text output instead of raw HTML.
-- Upload defense: avatars are stored with random filenames, size limits, extension checks,
+- Upload defense: headshots are stored with random filenames, size limits, extension checks,
   MIME checks, and JPG/PNG magic-byte checks.
 - Webshell defense: uploaded files are never executed, only served as static files from
   the `uploads` directory.
@@ -65,7 +65,7 @@ The Node server serves the built frontend from `dist` and exposes the API routes
 ## Deployment Important Note
 
 GitHub Pages can host only the static frontend. It cannot run the Express backend,
-PostgreSQL database, avatar upload storage, sessions, or OpenAI API calls.
+PostgreSQL database, headshot upload storage, sessions, or OpenAI API calls.
 
 To make all features work publicly, deploy the backend to a Node-capable platform such
 as Render, Railway, Fly.io, or a VPS. Then set the frontend environment variable:
