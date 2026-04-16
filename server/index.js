@@ -36,7 +36,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', 'true')
     res.setHeader('Vary', 'Origin')
   }
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
   if (req.method === 'OPTIONS') return res.sendStatus(204)
   next()
@@ -105,6 +105,11 @@ function readCookies(req) {
 }
 
 function getSessionToken(req) {
+  const authHeader = req.headers.authorization || ''
+  if (authHeader.startsWith('Bearer ')) {
+    return authHeader.slice('Bearer '.length)
+  }
+
   const cookie = readCookies(req).sid
   if (!cookie || !cookie.includes('.')) return null
 
@@ -133,6 +138,13 @@ function publicUser(user) {
     id: user.id,
     username: user.username,
     avatarUrl: user.avatar_path,
+  }
+}
+
+function loginPayload(user, token) {
+  return {
+    user,
+    token,
   }
 }
 
@@ -236,7 +248,7 @@ app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res)
       [token, userId, Date.now() + 7 * 24 * 60 * 60 * 1000],
     )
     setSessionCookie(res, token)
-    res.status(201).json({ user: { id: userId, username, avatarUrl: avatarPath } })
+    res.status(201).json(loginPayload({ id: userId, username, avatarUrl: avatarPath }, token))
   } catch (error) {
     if (error.code === '23505') {
       return res.status(409).json({ error: 'This username is already registered.' })
@@ -260,7 +272,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
     [token, user.id, Date.now() + 7 * 24 * 60 * 60 * 1000],
   )
   setSessionCookie(res, token)
-  res.json({ user: publicUser(user) })
+  res.json(loginPayload(publicUser(user), token))
 })
 
 app.post('/api/logout', requireAuth, async (req, res) => {

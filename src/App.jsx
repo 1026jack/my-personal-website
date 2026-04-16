@@ -3,6 +3,7 @@ import './App.css'
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || ''
 const ownerAvatar = `${import.meta.env.BASE_URL}headimg.JPG`
+const authTokenKey = 'jack_site_auth_token'
 
 function apiUrl(path) {
   return `${apiBase}${path}`
@@ -13,6 +14,11 @@ function assetUrl(path) {
   if (path.startsWith('http')) return path
   if (apiBase) return `${apiBase}${path}`
   return path
+}
+
+function authHeaders(extraHeaders = {}) {
+  const token = localStorage.getItem(authTokenKey)
+  return token ? { ...extraHeaders, Authorization: `Bearer ${token}` } : extraHeaders
 }
 
 function App() {
@@ -31,7 +37,10 @@ function App() {
     async function hydrate() {
       try {
         const [sessionResponse, messagesResponse] = await Promise.all([
-          fetch(apiUrl('/api/me'), { credentials: 'include' }),
+          fetch(apiUrl('/api/me'), {
+            credentials: 'include',
+            headers: authHeaders(),
+          }),
           fetch(apiUrl('/api/messages'), { credentials: 'include' }),
         ])
         const [sessionData, messagesData] = await Promise.all([
@@ -74,6 +83,7 @@ function App() {
       return
     }
 
+    localStorage.setItem(authTokenKey, data.token)
     setUser(data.user)
     setStatus('Registration successful. Welcome!')
     event.currentTarget.reset()
@@ -100,13 +110,19 @@ function App() {
       return
     }
 
+    localStorage.setItem(authTokenKey, data.token)
     setUser(data.user)
     setStatus('Login successful.')
     form.reset()
   }
 
   async function handleLogout() {
-    await fetch(apiUrl('/api/logout'), { method: 'POST', credentials: 'include' })
+    await fetch(apiUrl('/api/logout'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: authHeaders(),
+    })
+    localStorage.removeItem(authTokenKey)
     setUser(null)
     setStatus('Logged out.')
   }
@@ -115,7 +131,7 @@ function App() {
     event.preventDefault()
     const response = await fetch(apiUrl('/api/messages'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ content: messageText }),
       credentials: 'include',
     })
@@ -133,6 +149,7 @@ function App() {
   async function deleteMessage(id) {
     const response = await fetch(apiUrl(`/api/messages/${id}`), {
       method: 'DELETE',
+      headers: authHeaders(),
       credentials: 'include',
     })
 
@@ -148,7 +165,7 @@ function App() {
 
     const response = await fetch(apiUrl('/api/praise'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ text: praiseInput }),
       credentials: 'include',
     })
