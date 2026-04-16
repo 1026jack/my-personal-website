@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Jack Huang profile avatar</title>
+  <desc id="desc">A warm illustrated avatar for a personal website.</desc>
+  <rect width="512" height="512" rx="128" fill="#f6dfc1"/>
+  <circle cx="256" cy="218" r="108" fill="#2e1f14"/>
+  <circle cx="256" cy="238" r="92" fill="#d99b70"/>
+  <path d="M150 218c16-78 64-118 145-112 56 4 90 38 104 102-34-24-72-38-114-42-47-5-92 12-135 52Z" fill="#2e1f14"/>
+  <circle cx="222" cy="245" r="9" fill="#2e1f14"/>
+  <circle cx="300" cy="245" r="9" fill="#2e1f14"/>
+  <path d="M226 294c24 22 59 22 83 0" fill="none" stroke="#7e3f2a" stroke-width="12" stroke-linecap="round"/>
+  <path d="M96 444c20-78 80-128 160-128s140 50 160 128" fill="#9b5622"/>
+  <path d="M197 337 256 415l59-78" fill="#fffaf4"/>
+</svg>
