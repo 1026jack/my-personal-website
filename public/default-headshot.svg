@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Default guest headshot</title>
+  <rect width="256" height="256" rx="64" fill="#f3dfc7"/>
+  <circle cx="128" cy="94" r="44" fill="#9b5622"/>
+  <path d="M48 224c12-58 43-89 80-89s68 31 80 89" fill="#c9722c"/>
+  <path d="M89 101c18 20 60 20 78 0" fill="none" stroke="#fffaf4" stroke-width="8" stroke-linecap="round"/>
+</svg>

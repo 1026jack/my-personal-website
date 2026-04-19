@@ -3,6 +3,7 @@ import './App.css'
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || ''
 const ownerAvatar = `${import.meta.env.BASE_URL}headimg.JPG`
+const defaultHeadshot = `${import.meta.env.BASE_URL}default-headshot.svg`
 const authTokenKey = 'jack_site_auth_token'
 
 function apiUrl(path) {
@@ -10,7 +11,7 @@ function apiUrl(path) {
 }
 
 function assetUrl(path) {
-  if (!path) return ownerAvatar
+  if (!path) return defaultHeadshot
   if (path.startsWith('http')) return path
   if (apiBase) return `${apiBase}${path}`
   return path
@@ -177,6 +178,9 @@ function App() {
       return
     }
     setPraise(data.praise)
+    if (typeof data.aiUsesRemaining === 'number') {
+      setUser((current) => current ? { ...current, aiUsesRemaining: data.aiUsesRemaining } : current)
+    }
   }
 
   return (
@@ -289,6 +293,7 @@ function App() {
               <div>
                 <strong>{user.username}</strong>
                 <p>You can leave messages and use the AI praise machine.</p>
+                <p>AI uses remaining: {user.aiUsesRemaining ?? 5}</p>
                 <button className="text-button" type="button" onClick={handleLogout}>
                   Logout
                 </button>
@@ -316,8 +321,8 @@ function App() {
                     <input name="password" type="password" autoComplete="new-password" required minLength="8" />
                   </label>
                   <label>
-                    Headshot (JPG or PNG)
-                    <input name="avatar" type="file" accept="image/jpeg,image/png" required />
+                    Headshot (JPG or PNG, optional)
+                    <input name="avatar" type="file" accept="image/jpeg,image/png" />
                   </label>
                   <label className="checkbox-label">
                     <input name="humanCheck" type="checkbox" required />
@@ -354,7 +359,10 @@ function App() {
             <h2>Get Complimented</h2>
           </div>
           <form className="stack-form" onSubmit={handlePraise}>
-            <p className="hint-text">Each account can use this AI praise machine up to 5 times.</p>
+            <p className="hint-text">
+              Each account can use this AI praise machine up to 5 times.
+              {user ? ` You have ${user.aiUsesRemaining ?? 5} uses left.` : ''}
+            </p>
             <label>
               Enter anything
               <textarea

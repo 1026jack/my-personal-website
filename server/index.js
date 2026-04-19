@@ -137,6 +137,7 @@ function publicUser(user) {
     id: user.id,
     username: user.username,
     avatarUrl: user.avatar_path,
+    aiUsesRemaining: Math.max(0, 5 - Number(user.ai_uses || 0)),
   }
 }
 
@@ -152,7 +153,7 @@ async function authenticate(req, _res, next) {
   if (!token) return next()
 
   const session = await getOne(
-    `SELECT users.id, users.username, users.avatar_path
+    `SELECT users.id, users.username, users.avatar_path, users.ai_uses
      FROM sessions
      JOIN users ON users.id = sessions.user_id
      WHERE sessions.token = $1 AND sessions.expires_at > $2`,
@@ -175,7 +176,7 @@ function cleanText(value, maxLength) {
 }
 
 function validateAvatar(file) {
-  if (!file) return 'Please upload a headshot.'
+  if (!file) return null
 
   const ext = path.extname(file.originalname).toLowerCase()
   const isJpeg = file.buffer.length > 3 && file.buffer[0] === 0xff && file.buffer[1] === 0xd8 && file.buffer[2] === 0xff
@@ -240,14 +241,14 @@ app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res)
   if (avatarError) return res.status(400).json({ error: avatarError })
 
   try {
-    const avatarToken = crypto.randomBytes(32).toString('hex')
-    const avatarPath = `/api/headshots/${avatarToken}`
+    const avatarToken = req.file ? crypto.randomBytes(32).toString('hex') : null
+    const avatarPath = avatarToken ? `/api/headshots/${avatarToken}` : ''
     const passwordHash = await bcrypt.hash(password, 12)
     const result = await query(
       `INSERT INTO users (username, password_hash, avatar_path, avatar_token, avatar_data, avatar_mime)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id`,
-      [username, passwordHash, avatarPath, avatarToken, req.file.buffer, req.file.mimetype],
+       RETURNING id, ai_uses`,
+      [username, passwordHash, avatarPath, avatarToken, req.file?.buffer || null, req.file?.mimetype || null],
     )
     const userId = result.rows[0].id
 
@@ -257,7 +258,7 @@ app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res)
       [token, userId, Date.now() + 7 * 24 * 60 * 60 * 1000],
     )
     setSessionCookie(res, token)
-    res.status(201).json(loginPayload({ id: userId, username, avatarUrl: avatarPath }, token))
+    res.status(201).json(loginPayload(publicUser({ id: userId, username, avatar_path: avatarPath, ai_uses: result.rows[0].ai_uses }), token))
   } catch (error) {
     if (error.code === '23505') {
       return res.status(409).json({ error: 'This username is already registered.' })
@@ -395,7 +396,8 @@ app.post('/api/praise', aiLimiter, requireAuth, async (req, res) => {
   const praise = getResponseText(data)
   if (!praise) return res.status(502).json({ error: 'OpenAI returned no praise text. Please try again.' })
   await query('UPDATE users SET ai_uses = ai_uses + 1 WHERE id = $1', [req.user.id])
-  res.json({ praise })
+  const updatedUsage = await getOne('SELECT ai_uses FROM users WHERE id = $1', [req.user.id])
+  res.json({ praise, aiUsesRemaining: Math.max(0, 5 - Number(updatedUsage?.ai_uses || 0)) })
 })
 
 if (fsSync.existsSync(distDir)) {
