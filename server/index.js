@@ -208,11 +208,11 @@ app.get('/api/me', (req, res) => {
   res.json({ user: req.user ? publicUser(req.user) : null })
 })
 
-app.get('/api/headshots/:userId', async (req, res) => {
-  const userId = Number(req.params.userId)
-  if (!Number.isInteger(userId)) return res.status(400).send('Invalid user id.')
+app.get('/api/headshots/:token', async (req, res) => {
+  const token = String(req.params.token || '')
+  if (!/^[a-f0-9]{64}$/.test(token)) return res.status(400).send('Invalid headshot token.')
 
-  const user = await getOne('SELECT avatar_data, avatar_mime FROM users WHERE id = $1', [userId])
+  const user = await getOne('SELECT avatar_data, avatar_mime FROM users WHERE avatar_token = $1', [token])
   if (!user?.avatar_data || !user.avatar_mime) return res.status(404).send('Headshot not found.')
 
   res.setHeader('Content-Type', user.avatar_mime)
@@ -240,16 +240,16 @@ app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res)
   if (avatarError) return res.status(400).json({ error: avatarError })
 
   try {
+    const avatarToken = crypto.randomBytes(32).toString('hex')
+    const avatarPath = `/api/headshots/${avatarToken}`
     const passwordHash = await bcrypt.hash(password, 12)
     const result = await query(
-      `INSERT INTO users (username, password_hash, avatar_path, avatar_data, avatar_mime)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (username, password_hash, avatar_path, avatar_token, avatar_data, avatar_mime)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [username, passwordHash, '', req.file.buffer, req.file.mimetype],
+      [username, passwordHash, avatarPath, avatarToken, req.file.buffer, req.file.mimetype],
     )
     const userId = result.rows[0].id
-    const avatarPath = `/api/headshots/${userId}`
-    await query('UPDATE users SET avatar_path = $1 WHERE id = $2', [avatarPath, userId])
 
     const token = crypto.randomBytes(32).toString('hex')
     await query(

@@ -1,4 +1,5 @@
 import pg from 'pg'
+import crypto from 'node:crypto'
 
 const { Pool } = pg
 
@@ -30,6 +31,7 @@ export async function initDb() {
       username TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       avatar_path TEXT NOT NULL,
+      avatar_token TEXT UNIQUE,
       avatar_data BYTEA,
       avatar_mime TEXT,
       ai_uses INTEGER NOT NULL DEFAULT 0,
@@ -51,7 +53,25 @@ export async function initDb() {
     );
 
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_uses INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_token TEXT UNIQUE;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data BYTEA;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
   `)
+
+  const usersWithoutTokens = await query(
+    `SELECT id
+     FROM users
+     WHERE avatar_token IS NULL
+       AND avatar_data IS NOT NULL
+       AND avatar_mime IS NOT NULL`,
+  )
+
+  for (const user of usersWithoutTokens.rows) {
+    const token = crypto.randomBytes(32).toString('hex')
+    await query('UPDATE users SET avatar_token = $1, avatar_path = $2 WHERE id = $3', [
+      token,
+      `/api/headshots/${token}`,
+      user.id,
+    ])
+  }
 }
