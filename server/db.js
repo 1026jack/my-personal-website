@@ -30,6 +30,8 @@ export async function initDb() {
       username TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       avatar_path TEXT NOT NULL,
+      avatar_data BYTEA,
+      avatar_mime TEXT,
       ai_uses INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -49,5 +51,7 @@ export async function initDb() {
     );
 
     ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_uses INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data BYTEA;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
   `)
 }

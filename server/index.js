@@ -2,7 +2,6 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import express from 'express'
 import rateLimit from 'express-rate-limit'
-import fs from 'node:fs/promises'
 import fsSync from 'node:fs'
 import helmet from 'helmet'
 import multer from 'multer'
@@ -203,17 +202,24 @@ function getResponseText(data) {
   )
 }
 
-async function saveAvatar(file) {
-  const ext = file.mimetype === 'image/png' ? '.png' : '.jpg'
-  const filename = `${crypto.randomUUID()}${ext}`
-  await fs.writeFile(path.join(uploadsDir, filename), file.buffer, { flag: 'wx' })
-  return `/uploads/${filename}`
-}
-
 app.use(authenticate)
 
 app.get('/api/me', (req, res) => {
   res.json({ user: req.user ? publicUser(req.user) : null })
+})
+
+app.get('/api/headshots/:userId', async (req, res) => {
+  const userId = Number(req.params.userId)
+  if (!Number.isInteger(userId)) return res.status(400).send('Invalid user id.')
+
+  const user = await getOne('SELECT avatar_data, avatar_mime FROM users WHERE id = $1', [userId])
+  if (!user?.avatar_data || !user.avatar_mime) return res.status(404).send('Headshot not found.')
+
+  res.setHeader('Content-Type', user.avatar_mime)
+  res.setHeader('Cache-Control', 'public, max-age=86400')
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+  res.setHeader('Access-Control-Allow-Origin', clientOrigin || '*')
+  res.send(user.avatar_data)
 })
 
 app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res) => {
@@ -234,13 +240,16 @@ app.post('/api/register', authLimiter, upload.single('avatar'), async (req, res)
   if (avatarError) return res.status(400).json({ error: avatarError })
 
   try {
-    const avatarPath = await saveAvatar(req.file)
     const passwordHash = await bcrypt.hash(password, 12)
     const result = await query(
-      'INSERT INTO users (username, password_hash, avatar_path) VALUES ($1, $2, $3) RETURNING id',
-      [username, passwordHash, avatarPath],
+      `INSERT INTO users (username, password_hash, avatar_path, avatar_data, avatar_mime)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
+      [username, passwordHash, '', req.file.buffer, req.file.mimetype],
     )
     const userId = result.rows[0].id
+    const avatarPath = `/api/headshots/${userId}`
+    await query('UPDATE users SET avatar_path = $1 WHERE id = $2', [avatarPath, userId])
 
     const token = crypto.randomBytes(32).toString('hex')
     await query(

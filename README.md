@@ -20,11 +20,11 @@ message board, and an AI praise machine powered by OpenAI's Responses API.
 - SQL Injection defense: all database access uses prepared statements.
 - Password safety: visitor passwords are hashed with bcrypt before storage.
 - XSS defense: messages are rendered through React text output instead of raw HTML.
-- Upload defense: headshots are stored with random filenames, size limits, extension checks,
+- Upload defense: headshots are stored in PostgreSQL with size limits, extension checks,
   MIME checks, and JPG/PNG magic-byte checks.
-- Webshell defense: uploaded files are never executed, only served as static files from
-  the `uploads` directory.
-- Backend file defense: `.env` and upload data are ignored by Git and
+- Webshell defense: uploaded files are never executed. Guest headshots are returned by a
+  controlled API route instead of being served from the app filesystem.
+- Backend file defense: `.env` is ignored by Git and
   should not be exposed through static hosting.
 - OpenAI API key defense: the API key is used only by the backend and is never sent to
   frontend JavaScript.
@@ -65,7 +65,7 @@ The Node server serves the built frontend from `dist` and exposes the API routes
 ## Deployment Important Note
 
 GitHub Pages can host only the static frontend. It cannot run the Express backend,
-PostgreSQL database, headshot upload storage, sessions, or OpenAI API calls.
+PostgreSQL database, headshot storage, sessions, or OpenAI API calls.
 
 To make all features work publicly, deploy the backend to a Node-capable platform such
 as Render, Railway, Fly.io, or a VPS. Then set the frontend environment variable:
